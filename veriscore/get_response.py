@@ -2,8 +2,8 @@ import os
 import pdb
 import json
 import tiktoken
-from openai import OpenAI
-from anthropic import Anthropic
+#from openai import OpenAI
+#from anthropic import Anthropic
 
 
 class GetResponse():
