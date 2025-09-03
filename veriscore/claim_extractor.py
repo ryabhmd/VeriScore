@@ -14,7 +14,7 @@ class ClaimExtractor():
             from unsloth import FastLanguageModel
             self.model, self.tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_name,
-                max_seq_length=1024,
+               #max_seq_length=1024,
                 dtype=None,
                 load_in_4bit=True,
             )
