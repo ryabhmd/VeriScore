@@ -3,7 +3,7 @@ import pdb
 import json
 
 from .get_response import GetResponse
-
+from verification_cache import VerificationCache
 
 class ClaimVerifier():
     def __init__(self, model_name, label_n=2, cache_dir="./data/cache/", demon_dir="data/demos/",
@@ -11,6 +11,8 @@ class ClaimVerifier():
         self.model = None
         self.model_name = model_name
         self.label_n = label_n
+        self.verification_cache = VerificationCache("./data/cache/verification_cache.db")
+
         if os.path.isdir(model_name) or use_external_model:
             from unsloth import FastLanguageModel
 
@@ -92,6 +94,20 @@ class ClaimVerifier():
         out_lst = []
         claim_verify_res_dict = {}
         for claim, search_snippet_lst in claim_snippets_dict.items():
+            cached_verdict = self.verification_cache.get(claim, self.model_name)
+
+            if cached_verdict is not None:
+                print(f"[Verification Cache Hit] {claim}")
+                
+                claim_verify_res_dict = {
+                    "claim": claim,
+                    "search_results": search_snippet_lst,
+                    "verification_result": cached_verdict
+                    }
+                
+                out_lst.append(claim_verify_res_dict)
+                continue
+            
             search_res_str = ""
             search_cnt = 1
             for search_dict in search_snippet_lst[:search_res_num]:
@@ -125,6 +141,13 @@ class ClaimVerifier():
                 response_tok_cnt += response_tok_num
 
                 clean_output = response.replace("#", "").split(".")[0].lower() if response is not None else None
+                
+                if clean_output is not None:
+                    self.verification_cache.add(
+                        claim=claim,
+                        model_name=self.model_name,
+                        verdict=clean_output
+                        )
             claim_verify_res_dict = {"claim": claim,
                                      "search_results": search_res_str,
                                      "verification_result": clean_output}

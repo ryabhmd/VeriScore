@@ -4,8 +4,7 @@ import pdb
 import json
 import requests
 from tqdm import tqdm
-
-SERPER_API_KEY='5120406167e289372b8e3b90bc97a895c5edef65'
+from verification_cache import normalize_claim
 
 class SearchAPI():
     def __init__(self):
@@ -46,7 +45,7 @@ class SearchAPI():
 
     def get_search_res(self, query):
         # check if prompt is in cache; if so, return from cache
-        cache_key = query.strip()
+        cache_key = normalize_claim(query)
         if cache_key in self.cache_dict:
             # print("Getting search results from cache ...")
             return self.cache_dict[cache_key]
