@@ -5,11 +5,12 @@ import json
 import requests
 from tqdm import tqdm
 
+SERPER_API_KEY='5120406167e289372b8e3b90bc97a895c5edef65'
 
 class SearchAPI():
     def __init__(self):
         # invariant variables
-        self.serper_key = os.getenv("SERPER_KEY_PRIVATE")
+        self.serper_key = SERPER_API_KEY
         self.url = "https://google.serper.dev/search"
         self.headers = {'X-API-KEY': self.serper_key,
                         'Content-Type': 'application/json'}

@@ -14,7 +14,7 @@ class ClaimExtractor():
             from unsloth import FastLanguageModel
             self.model, self.tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_name,
-               #max_seq_length=1024,
+                #max_seq_length=self.max_seq_length,
                 dtype=None,
                 load_in_4bit=True,
             )
@@ -54,6 +54,7 @@ class ClaimExtractor():
             if self.model:
                 input = response.strip()
                 snippet = input.replace(sentence, f"<SOS>{sentence}<EOS>")
+                
             else:
                 lead_sent = sentences[0]  # 1st sentence of the para
                 context1 = " ".join(sentences[max(0, i - 3):i])
@@ -66,6 +67,8 @@ class ClaimExtractor():
                 # if the para is long, add lead sentence to context1
                 else:
                     snippet = f"{lead_sent.strip()} {context1.strip()} {sentence.strip()} {context2.strip()}".strip()
+
+                print(f"snippet: {snippet}")
 
             snippet_lst.append(snippet)
 
@@ -172,8 +175,9 @@ class ClaimExtractor():
         """
 
         if self.model:
+
             formatted_input = self.alpaca_prompt.format(snippet, "")
-            inputs = self.tokenizer(formatted_input, return_tensors="pt").to("cuda")
+            inputs = self.tokenizer(formatted_input, return_tensors="pt", truncation=True, max_length=2048).to("cuda")
 
             outputs = self.model.generate(**inputs, max_new_tokens=1000, use_cache=True)
             output_str = ' '.join(self.tokenizer.batch_decode(outputs))

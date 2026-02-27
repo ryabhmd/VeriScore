@@ -43,7 +43,7 @@ if __name__ == '__main__':
         for dict_item in tqdm(data):
             # get necessary info
 
-            response = dict_item["response"][:2048]
+            response = dict_item["response"]
             prompt_source = dict_item["prompt_source"]
             model = dict_item["model"]
 
