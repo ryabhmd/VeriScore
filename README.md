@@ -126,3 +126,41 @@ This [Google Drive folder](https://drive.google.com/drive/folders/1hzazGn9gxBNgk
 
 - the long-form generations of the tested models given the prompts in Table 1 in the paper
 - human annotation results in Section 3.3
+
+## SciFactCheck
+
+### Step 1: Claim Extraction
+
+Extracts atomic claims from model-generated paragraphs using a Mistral-based claim extraction model.
+
+```bash
+python3 -m veriscore.extract_claims \
+    --data_dir ./data \
+    --input_file input_files/_veriscore_input.jsonl \
+    --output_dir ./data \
+    --model_name SYX/mistral_based_claim_extractor \
+    --use_external_model
+```
+
+### Step 2: Evidence Retrieval
+
+Retrieves evidence from Google Search via the Serper API for each extracted claim. Requires a Serper API key set in your `.env` file.
+
+```bash
+python3 -m veriscore.retrieve_evidence \
+    --data_dir ./data \
+    --input_file claims_input_files/_veriscore_input.jsonl \
+    --output_dir ./data
+```
+
+### Step 3: Claim Verification
+
+Verifies each claim against the retrieved evidence using a Llama-3-based claim verification model.
+
+```bash
+python3 -m veriscore.verify_claims \
+    --data_dir ./data \
+    --input_file evidence_claims_input_files/_veriscore_input.jsonl \
+    --model_name SYX/llama3_based_claim_verifier \
+    --use_external_model
+```
