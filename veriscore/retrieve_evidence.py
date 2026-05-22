@@ -31,7 +31,7 @@ if __name__ == '__main__':
     output_dir = args.output_dir
     output_file = f"evidence_{input_file_name}.jsonl"
     output_path = os.path.join(output_dir, output_file)
-    os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     with open(output_path, "w") as f:
         for dict_item in tqdm(data):

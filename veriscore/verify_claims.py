@@ -41,8 +41,7 @@ if __name__ == '__main__':
     output_file = f'verification_{input_file_name}_{label_n}.jsonl'
     output_path = os.path.join(output_dir, output_file)
 
-    model_domain_triplet_dict = defaultdict(
-        lambda: defaultdict(list))  # triplet = [[supported, total, # of sentences], ...]
+    model_domain_triplet_dict = defaultdict(list)  # triplet = [[supported, total, # of sentences], ...]
 
     total_prompt_tok_cnt = 0
     total_resp_tok_cnt = 0
@@ -50,7 +49,6 @@ if __name__ == '__main__':
     with open(output_path, "w") as f:
         for dict_item in tqdm(input_data):
             model_name = dict_item['model']
-            domain = dict_item['prompt_source']
             claim_search_results = dict_item["claim_search_results"]
 
             if dict_item['abstained']:
@@ -76,7 +74,7 @@ if __name__ == '__main__':
                 for claim_veri_res in dict_item['claim_verification_result']:
                     if claim_veri_res['verification_result'] == "supported":
                         triplet[0] += 1
-            model_domain_triplet_dict[domain][model_name].append(triplet)
+            model_domain_triplet_dict[model_name].append(triplet)
 
 
     print(f"claim verification is done! saved to {output_path}")

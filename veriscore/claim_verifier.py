@@ -3,7 +3,7 @@ import pdb
 import json
 
 from .get_response import GetResponse
-from verification_cache import VerificationCache
+from .verification_cache import VerificationCache
 
 class ClaimVerifier():
     def __init__(self, model_name, label_n=2, cache_dir="./data/cache/", demon_dir="data/demos/",

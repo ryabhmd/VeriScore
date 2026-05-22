@@ -4,17 +4,20 @@ import pdb
 import json
 import requests
 from tqdm import tqdm
-from verification_cache import normalize_claim
+from .verification_cache import normalize_claim
+from dotenv import load_dotenv
 
 class SearchAPI():
     def __init__(self):
         # invariant variables
-        self.serper_key = SERPER_API_KEY
+        load_dotenv()
+        self.serper_key = os.getenv("SERPER_API_KEY")
+        print(self.serper_key)
         self.url = "https://google.serper.dev/search"
         self.headers = {'X-API-KEY': self.serper_key,
                         'Content-Type': 'application/json'}
         # cache related
-        self.cache_file = "data/cache/search_cache.json"
+        self.cache_file = "data/cache/search_cache_050426.json"
         self.cache_dict = self.load_cache()
         self.add_n = 0
         self.save_interval = 10
@@ -43,29 +46,47 @@ class SearchAPI():
             text_claim_snippets_dict[query] = search_res_lst
         return text_claim_snippets_dict
 
-    def get_search_res(self, query):
+    def get_search_res(self, query, retries=10):
         # check if prompt is in cache; if so, return from cache
         cache_key = normalize_claim(query)
-        if cache_key in self.cache_dict:
-            # print("Getting search results from cache ...")
-            return self.cache_dict[cache_key]
+        query = normalize_claim(query)
 
-        payload = json.dumps({"q": query})
-        response = requests.request("POST",
+        if cache_key in self.cache_dict:
+            cached = self.cache_dict[cache_key]
+            if not cached: # in case it saved an empty cached result
+                print(f"Skipping empty cached result for '{query}'")
+            else:
+                return self.cache_dict[cache_key]
+
+        payload = json.dumps({"q": query,
+                              "tbs": "qdr:y"})
+        for attempt in range(retries):
+            try:
+                response = requests.request("POST",
                                     self.url,
                                     headers=self.headers,
                                     data=payload)
-        response_json = literal_eval(response.text)
+                response.raise_for_status()
+                response_json = response.json()
 
-        # update cache
-        self.cache_dict[query.strip()] = response_json
-        self.add_n += 1
+                # update cache
+                self.cache_dict[query.strip()] = response_json
+                self.add_n += 1
+                # save cache every save_interval times
+                if self.add_n % self.save_interval == 0:
+                    self.save_cache()
 
-        # save cache every save_interval times
-        if self.add_n % self.save_interval == 0:
-            self.save_cache()
+                return response_json
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                print(f"Attempt {attempt + 1}/{retries} failed for query '{query}': {e}")
+                if attempt < retries - 1:
+                    import time
+                    time.sleep(5 ** attempt)
+                else:
+                    raise
 
-        return response_json
+            except requests.exceptions.HTTPError as e:
+                raise
 
     def save_cache(self):
         # load the latest cache first, since if there were other processes running in parallel, cache might have been updated
@@ -82,6 +103,7 @@ class SearchAPI():
                 # load a json file
                 cache = json.load(f)
                 print(f"Loading cache ...")
+            print(len(cache))
         else:
             cache = {}
         return cache
